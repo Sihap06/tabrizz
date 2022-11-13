@@ -181,7 +181,7 @@
 				info:false,
 				bDestroy: true,
 				lengthMenu: [[10,30,50,100,-1],[10,30,50,100,"All"]],
-				serverside:true,
+				serverSide:true,
 				language: { 
 					paginate: { previous: "<i class='fas fa-angle-left'>", next: "<i class='fas fa-angle-right'>"
 					}

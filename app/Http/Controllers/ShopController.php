@@ -136,25 +136,25 @@ class ShopController extends Controller
         if (!empty($request->from_date)) {
             $tgl_awal = date('Y-m-d', strtotime($request->from_date));
             $tgl_akhir = date('Y-m-d', strtotime($request->to_date));
-            
+
             $rekap = DB::table('save_orders as so')
-            ->select('so.id', 'so.qty', 'so.total', 'so.tanggal', 'sh.name', 'pd.product_name', 'pd.warna', 'us.name as nama_pegawai')
-            ->join('shops as sh', 'so.shop_id', '=', 'sh.id')
-            ->join('products as pd', 'so.product_id', '=', 'pd.id')
-            ->join('users as us', 'so.user_id', '=', 'us.id')
-            ->where('so.shop_id', $id)
-            ->whereBetween('so.tanggal', [$tgl_awal, $tgl_akhir])
-            ->where('so.deleted_at', NULL)
-            ->orderBy('so.created_at', 'asc');
+                ->select('so.id', 'so.qty', 'so.total', 'so.tanggal', 'sh.name', 'pd.product_name', 'pd.warna', 'us.name as nama_pegawai')
+                ->join('shops as sh', 'so.shop_id', '=', 'sh.id')
+                ->join('products as pd', 'so.product_id', '=', 'pd.id')
+                ->join('users as us', 'so.user_id', '=', 'us.id')
+                ->where('so.shop_id', $id)
+                ->whereBetween('so.tanggal', [$tgl_awal, $tgl_akhir])
+                ->where('so.deleted_at', NULL)
+                ->orderBy('so.created_at', 'asc');
         } else {
             $rekap = DB::table('save_orders as so')
-            ->select('so.id', 'so.qty', 'so.total', 'so.tanggal', 'sh.name', 'pd.product_name', 'pd.warna', 'us.name as nama_pegawai')
-            ->join('shops as sh', 'so.shop_id', '=', 'sh.id')
-            ->join('products as pd', 'so.product_id', '=', 'pd.id')
-            ->join('users as us', 'so.user_id', '=', 'us.id')
-            ->where('so.shop_id', $id)
-            ->where('so.deleted_at', NULL)
-            ->orderBy('so.created_at', 'asc');
+                ->select('so.id', 'so.qty', 'so.total', 'so.tanggal', 'sh.name', 'pd.product_name', 'pd.warna', 'us.name as nama_pegawai')
+                ->join('shops as sh', 'so.shop_id', '=', 'sh.id')
+                ->join('products as pd', 'so.product_id', '=', 'pd.id')
+                ->join('users as us', 'so.user_id', '=', 'us.id')
+                ->where('so.shop_id', $id)
+                ->where('so.deleted_at', NULL)
+                ->orderBy('so.created_at', 'asc');
         }
 
 
@@ -173,7 +173,7 @@ class ShopController extends Controller
         return $datatables->make(true);
     }
 
-    
+
     public function update(Request $request, $id)
     {
         $data = Toko::findOrFail($request->id);
@@ -249,6 +249,10 @@ class ShopController extends Controller
             ->addColumn('harga', function ($row) {
                 return number_format($row->final_price);
             })
+            ->addColumn('total', function ($row) {
+                $total = $row->final_price * $row->temp_stock;
+                return number_format($total);
+            })
             ->addColumn('action', function ($row) use ($shop) {
                 $btn = '<button id="edit-user" data-toggle="modal" data-target="#editModal" data-name="' . $row->product_name . '" data-warna="' . $row->warna . '" data-id="' . $row->id . '" data-product_id = "' . $row->product_id . '" data-harga="' . $row->final_price . '" data-stock = "' . $row->temp_stock . '" class="btn btn-info btn-sm">
                 <i class="fas fa-edit"></i>
@@ -263,7 +267,7 @@ class ShopController extends Controller
 
                 return $btn;
             })
-            ->rawColumns(['product_id', 'harga', 'action'])
+            ->rawColumns(['product_id', 'harga', 'total', 'action'])
             ->addIndexColumn();
 
         return $datatables->make(true);
@@ -465,6 +469,5 @@ class ShopController extends Controller
 
         Alert::success('Produk berhasil di hapus dari toko');
         return back();
-                
     }
 }

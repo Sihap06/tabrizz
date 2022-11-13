@@ -20,6 +20,8 @@ class ProdukKasir extends Component
     public $search;
     public $qty = [];
     public $bayar =  0;
+    public $diskon = 0;
+    public $diskonShow = 0;
 
 
     public function render()
@@ -62,10 +64,9 @@ class ProdukKasir extends Component
         foreach ($temp_order as $value) {
 
             $this->qty[$value->id] = $value->qty;
-            
         }
 
-        return view('livewire.produk-kasir', ['data' => $data, 'search' => $this->search, 'id_shop' => $shopUser, 'code' => $code, 'temp_order' => $temp_order]);
+        return view('livewire.produk-kasir', ['data' => $data, 'search' => $this->search, 'id_shop' => $shopUser, 'code' => $code, 'temp_order' => $temp_order, 'diskon' => $this->diskonShow]);
     }
 
     public function selectThis($id_product, $id_shop, $code)
@@ -112,7 +113,6 @@ class ProdukKasir extends Component
         }
     }
 
-
     public function submit($code, $total)
     {
         $this->validate(
@@ -130,6 +130,7 @@ class ProdukKasir extends Component
             $shop_id = DB::table('shop_user')->where('user_id', $user->id)->value('shop_id');
             $data = DB::table('orders')->where('code', $code)->get();
             $dateNow = date('Y-m-d', strtotime(Carbon::now()));
+            $jamNow = date('H:i:s', strtotime(Carbon::now()));
 
             foreach ($data as $key => $dt) {
                 DB::table('save_orders')->insert([
@@ -184,7 +185,7 @@ class ProdukKasir extends Component
             .feed(1)
         });  ";
 
-        $script1 = [];
+            $script1 = [];
             foreach ($data as $value) {
                 $name = Product::findOrFail($value->product_id)->product_name;
                 $price = Product::findOrFail($value->product_id)->final_price;
@@ -195,7 +196,7 @@ class ProdukKasir extends Component
 
                 $countpriceX = strlen($priceX);
                 $countsubtotalX = strlen($subtotalX);
-                $space = 33 -($countpriceX + $countsubtotalX + 4);
+                $space = 33 - ($countpriceX + $countsubtotalX + 4);
 
                 $script1[] = "
                 printer.open().then(function () {
@@ -208,7 +209,6 @@ class ProdukKasir extends Component
                     .text('$subtotalX')
                 })
                 ";
-
             }
 
 
@@ -251,6 +251,8 @@ class ProdukKasir extends Component
                 .text('Terimakasih Atas Kunjungannya')
                 .feed(1)
                 .text('Tanggal $dateNow')
+                .feed(1)
+                .text('Jam $jamNow')
                 .cut()
                 .print()
             });   ";
@@ -264,14 +266,18 @@ class ProdukKasir extends Component
             $this->bayar = 0;
 
             return redirect()->to('/');
-
         } else {
             session()->flash('error', 'Pembayaran Gagal');
 
             return redirect()->to('/');
-            
         }
+    }
 
-                    
+    public function processDiskon($total)
+    {
+        $tempDiskon = $total * $this->diskon / 100;
+        $this->diskonShow = $tempDiskon;
+
+        // dd($this->diskonShow);
     }
 }

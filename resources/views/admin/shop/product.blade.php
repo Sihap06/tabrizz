@@ -64,6 +64,7 @@
 									<th>Nama</th>
 									<th>Stok</th>
 									<th>Harga</th>
+									<th>Total</th>
 									<th>Action</th>
 								</tr>
 							</thead>
@@ -341,19 +342,27 @@
 					.reduce(function (a, b) {
 						return intVal(a) + intVal(b);
 					}, 0);
+
+					pageTotalHargaAll = api
+					.column(4, { page: 'current' })
+					.data()
+					.reduce(function (a, b) {
+						return intVal(a) + intVal(b);
+					}, 0);
 					
 					// Update footer
 					$(api.column(2).footer()).html(pageTotalStok);
 					$(api.column(3).footer()).html('Rp'+ pageTotalHarga.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+					$(api.column(4).footer()).html('Rp'+ pageTotalHargaAll.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
 					
-					const total = pageTotalStok * pageTotalHarga;
-					$(api.column(4).footer()).html('Rp'+ total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+					// const total = pageTotalStok * pageTotalHarga;
+					// $(api.column(4).footer()).html('Rp'+ total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
 				},
 				"pageLength":10,
 				processing:true,
 				searching:true,
 				info:false,
-				serverside:true,
+				serverSide:true,
 				language: { 
 					paginate: { previous: "<i class='fas fa-angle-left'>", next: "<i class='fas fa-angle-right'>"
 					}
@@ -375,6 +384,7 @@
 				{data: 'product_id', name: 'product_id'},
 				{data: 'temp_stock', name: 'temp_stock'},
 				{data: 'harga', name: 'harga'},
+				{data: 'total', name: 'total'},
 				{data: 'action', name: 'action'},
 				]
 				

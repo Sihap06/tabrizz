@@ -75,14 +75,57 @@
             </div>
             
             <div class="card-body">
-                <div class="mb-5 text-center">
-                    <h2 class="text-red">Total Belanja : Rp{{number_format($total)}}</h2>
+                <div class="row">
+                    <div class="col-8">
+                        <h4>Total Belanja</h4>
+                        <h4>Diskon</h4>
+                    </div>
+                    <div class="col-4">
+                        <div class="row justify-content-between">
+                            <p class="text-bold text-darker mb-0">Rp</p>
+                            <p class="text-bold text-darker mb-0">{{number_format($total)}}</p>
+                        </div>
+                        <div class="row justify-content-between">
+                            <p class="text-bold text-darker mb-0">Rp</p>
+                            <p class="text-bold text-darker mb-0">{{number_format($diskonShow)}}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-5 row border-top">
+                    <div class="col-8">
+                        <h4>Total</h4>
+                    </div>
+                    <div class="col-4">
+                        <div class="row justify-content-between">
+                            <p class="text-bold text-darker mb-0">Rp</p>
+                            <p class="text-bold text-darker mb-0">{{number_format($total - $diskonShow)}}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-5">
                     <div class="text-center" wire:loading wire:target="submit">
                         <img src="{{asset('assets/img/loading_inline.gif')}}" alt="loading">
                     </div>
                 </div>
+                <form role="form" wire:submit.prevent="processDiskon({{$total}})">
+                    <div class="form-group">
+                        <label for="diskon">Diskon</label>
+                        <div class="input-group has-validation">
+                            <input class="form-control @error('diskon') is-invalid @enderror" type="text" wire:model.defer="diskon" id="diskon" aria-describedby="inputGroupPrepend">
+                            <div class="input-group-append">
+                                <span class="input-group-text" id="basic-addon2">%</span>
+                            </div>
+                            @error('diskon') 
+                            <div class="invalid-feedback">
+                                {{$message}}
+                            </div>
+                            @enderror
+                        </div>
+                    </div>
+                    
+                </form>
                 <form wire:submit.prevent="submit({{$code}}, {{$total}})">
-                    <div>
+                    <div class="form-group">
                         <label for="bayar">Bayar</label>
                         <div class="input-group has-validation">
                             <div class="input-group-prepend">
@@ -96,8 +139,8 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="mt-3">
-                        <button class="btn btn-primary" type="submit">Bayar</button>
+                    <div class="mt-5">
+                        <button class="btn btn-primary btn-block" type="submit">Bayar</button>
                     </div>
                 </form>
             </div>
@@ -132,7 +175,7 @@
                 }
             },
         });
-
+        
         $('#search').select2('open')
         
         function pickThis(value) {
@@ -166,8 +209,9 @@
             searching:true,
             bDestroy: true,
             info:false,
+            ordering:false,
             lengthMenu: [[10,30,50,100,-1],[10,30,50,100,"All"]],
-            serverside:true,
+            serverSide:true,
             language: { 
                 paginate: { previous: "<i class='fas fa-angle-left'>", next: "<i class='fas fa-angle-right'>"
                 }
@@ -176,9 +220,9 @@
                 url:"{{route('ajax.get.produk.kasir')}}",
             },
             columns: [
-            {data: 'product_id', name: 'product_id'},
-            {data: 'price', name: 'price'},
-            {data: 'temp_stock', name: 'temp_stock'},
+            {data: 'product_name', name: 'products.product_name'},
+            {data: 'final_price', name: 'products.final_price'},
+            {data: 'temp_stock', name: 'product_shop.temp_stock'},
             ]
             
         });

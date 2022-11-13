@@ -51,6 +51,12 @@ Route::group(['middleware' => ['auth', 'admin']], function () {
     ]);
     Route::get('getproduktoko/{id}', 'ShopController@getproduct');
     Route::get('getusertoko/{id}', 'ShopController@getuser');
+
+    Route::group(['prefix' => 'diskon'], function () {
+        Route::get('', 'DiskonController@index')->name('diskon');
+        Route::get('getdiskon', 'DiskonController@getDiskon')->name('ajax.get.produk.diskon');
+    });
+
     Route::get('getshop', [
         'uses' => 'ShopController@getshop',
         'as' => 'ajax.get.shop',
@@ -72,7 +78,6 @@ Route::group(['middleware' => ['auth', 'admin']], function () {
 
     Route::post('transfer-produk', 'ShopController@transfer_produk')->name('transfer-produk');
     Route::post('hapus-produk/{product_id}/{shop_id}', 'ShopController@hapusProduk');
-
 });
 
 Route::group(['middleware' => ['auth']], function () {

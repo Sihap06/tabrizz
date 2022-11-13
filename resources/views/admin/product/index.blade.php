@@ -81,7 +81,7 @@
 
 <!-- Create Modal -->
 <div class="modal fade" id="createModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modal-title">Tambah Produk</h5>
@@ -92,45 +92,61 @@
             <form id="tambahForm" name="tambahForm" action="{{route('product.store')}}" method="POST" enctype="multipart/form-data">
                 @csrf
                 
-                <div class="modal-body">
-                    {{-- <input type="hidden" name="user_id" id="user_id" value=""> --}}
-                    <div class="form-group">
-                        <label for="status" class="col-form-label">Kategori:</label>
-                        <div class="input-group mb-3">
-                            <select class="form-control @error('category') is-invalid @enderror" name="category" id="category" data-toggle="select">
-                                {{-- <option selected>Choose...</option> --}}
-                                @foreach ($category as $item)
-                                <option value="{{$item->id}}">{{$item->name}}</option>
-                                @endforeach
-                            </select>
-                            @error('category') <div class="invalid-feedback">{{$message}}</div> @enderror
+                <div class="modal-body row">
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label for="status" class="col-form-label">Kategori:</label>
+                            <div class="input-group mb-3">
+                                <select class="form-control @error('category') is-invalid @enderror" name="category" id="category" data-toggle="select">
+                                    {{-- <option selected>Choose...</option> --}}
+                                    @foreach ($category as $item)
+                                    <option value="{{$item->id}}">{{$item->name}}</option>
+                                    @endforeach
+                                </select>
+                                @error('category') <div class="invalid-feedback">{{$message}}</div> @enderror
+                            </div>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label for="status" class="col-form-label">Kode Produk:</label>
-                        <input type="text" name="kode" id="kode" class="form-control @error('kode')
-                        is-invalid @enderror">
-                        @error('kode') <div class="invalid-feedback">{{$message}}</div> @enderror
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label for="status" class="col-form-label">Kode Produk:</label>
+                            <input type="text" name="kode" id="kode" class="form-control @error('kode')
+                            is-invalid @enderror">
+                            @error('kode') <div class="invalid-feedback">{{$message}}</div> @enderror
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="status" class="col-form-label">Nama Produk:</label>
-                        <input type="text" name="nama" id="nama" class="form-control">
+                    
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label for="status" class="col-form-label">Nama Produk:</label>
+                            <input type="text" name="nama" id="nama" class="form-control">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="status" class="col-form-label">Warna Produk:</label>
-                        <input type="text" name="warna" id="warna" class="form-control">
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label for="status" class="col-form-label">Warna Produk:</label>
+                            <input type="text" name="warna" id="warna" class="form-control">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="status" class="col-form-label">Harga Beli:</label>
-                        <input type="number" name="harga_beli" id="harga_beli" class="form-control">
+                    
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label for="status" class="col-form-label">Harga Beli:</label>
+                            <input type="number" name="harga_beli" id="harga_beli" class="form-control">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="status" class="col-form-label">Harga Jual:</label>
-                        <input type="number" name="harga" id="harga" class="form-control">
+                    
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label for="status" class="col-form-label">Harga Jual:</label>
+                            <input type="number" name="harga" id="harga" class="form-control">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="status" class="col-form-label">Stock Produk:</label>
-                        <input type="number" name="stock" id="stock" class="form-control">
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label for="status" class="col-form-label">Stock Produk:</label>
+                            <input type="number" name="stock" id="stock" class="form-control">
+                        </div>
                     </div>
                     
                     
@@ -334,7 +350,7 @@
                 order:[[0,'asc']],
                 info:false,
                 lengthMenu: [[5,10,15,20,-1],[5,10,15,20,"All"]],
-                serverside:true,
+                serverSide:true,
                 ordering:true,
                 language: { 
                     paginate: { previous: "<i class='fas fa-angle-left'>", next: "<i class='fas fa-angle-right'>"
@@ -346,13 +362,13 @@
                 },
                 columns: [
                 {
-					data: null,
-					searchable: false,
-					orderable: false,
-					render: function (data, type, row, meta) {
-						return meta.row + meta.settings._iDisplayStart + 1;
-					}  
-				},
+                    data: null,
+                    searchable: false,
+                    orderable: false,
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    }  
+                },
                 {data: 'product_name', name: 'product_name'},
                 {data: 'harga_beli', name: 'harga_beli'},
                 {data: 'price', name: 'price'},
@@ -365,6 +381,7 @@
                 
             });
         }
+        
         $('#filter').click(function(){
             var kategori = $('#kategori').val();
             if(kategori != '')

@@ -51,26 +51,34 @@ class OrderController extends Controller
         $user_id = Auth::user()->id;
         $shop_id = DB::table('shop_user')->where('user_id', $user_id)->value('shop_id');
         // dd($shop_id);
-        DB::statement(DB::raw('set @rownum=0'));
-        $barang = DB::table('product_shop')->where('shop_id', $shop_id)->select([
-            DB::raw('@rownum  := @rownum  + 1 AS rownum'),
-            'id',
-            'product_id',
-            'temp_stock',
-        ]);
+        // DB::statement(DB::raw('set @rownum=0'));
+        // $barang = DB::table('product_shop')->where('shop_id', $shop_id)->select([
+        //     DB::raw('@rownum  := @rownum  + 1 AS rownum'),
+        //     'id',
+        //     'product_id',
+        //     'temp_stock',
+        // ]);
+
+        $barang = DB::table('products')
+            ->join('product_shop', 'products.id', '=', 'product_shop.product_id')
+            ->where('products.deleted_at', NULL)
+            ->where('product_shop.shop_id', $shop_id)
+            ->select([
+                'products.product_name',
+                'products.warna',
+                'product_shop.temp_stock',
+                'products.final_price',
+            ]);
 
 
         $datatables = Datatables::of($barang)
-            ->editColumn('product_id', function ($row) {
-                $product_name = DB::table('products')->where('id', $row->product_id)->value('product_name');
-                $warna = DB::table('products')->where('id', $row->product_id)->value('warna');
-                $id = $row->product_id;
-                return '<span id="' . $id . '"  style="cursor:pointer;" class="btn-barang">' . $product_name . ' - ' . $warna;
+            ->editColumn('product_name', function ($row) {
+                return $row->product_name . ' - ' . $row->warna;
             })
-            ->editColumn('price', function ($row) {
-                return number_format(DB::table('products')->where('id', $row->product_id)->value('final_price'));
+            ->editColumn('final_price', function ($row) {
+                return number_format($row->final_price);
             })
-            ->rawColumns(['product_id', 'price'])
+            ->rawColumns(['product_id', 'final_price'])
             ->addIndexColumn();
 
 
@@ -141,6 +149,7 @@ class OrderController extends Controller
         $data = DB::table('orders')->where('code', $code)->get();
         $name = Auth::user()->name;
         $dateNow = date('d-m-Y H:i:s', strtotime(Carbon::now()));
+        dd($dateNow);
 
 
         foreach ($data as $key => $dt) {
@@ -189,6 +198,8 @@ class OrderController extends Controller
             .text('No. $code')
             .feed(1)
             .text('Kasir = $name')
+            .feed(1)
+            .text('Jam = ')
             .feed(1)
             .text('================================')
             .feed(1)
