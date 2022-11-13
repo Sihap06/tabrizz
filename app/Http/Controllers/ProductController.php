@@ -12,6 +12,7 @@ use App\ProductShop;
 use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\Facades\DataTables;
 use RealRashid\SweetAlert\Facades\Alert;
+use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
 {
@@ -232,5 +233,45 @@ class ProductController extends Controller
         }
 
         return response()->json($formatted_tags);
+    }
+    public function updateDiscount(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'type' => 'required',
+            'value' => 'required|integer',
+            'start' => 'required|date_format:Y-m-d H:i:s',
+            'end' => 'required|date_format:Y-m-d H:i:s',
+            'product_id' => 'required',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'errors',
+                'message' => $validator->errors()
+            ], 400);
+        }
+        $status = null;
+        $message = null;
+        DB::transaction(function () use ($request, &$status, &$message) {
+            try {
+                $update = DB::table('products')
+                    ->whereIn('id', $request->get('product_id'))
+                    ->update([
+                        'discount_type' => $request->get('type'),
+                        'diskon' => $request->get('value'),
+                        'start_discount' => $request->get('start'),
+                        'end_discount' => $request->get('end'),
+                    ]);
+                $status = 'success';
+                $message = 'sukses memperbarui data diskon!';
+            } catch (\Throwable $th) {
+                DB::rollback();
+                $status = 'failed';
+                $message = $th->getMessage();
+            }
+        });
+        return response()->json([
+            'status' => $status,
+            'message' => $message
+        ]);
     }
 }
