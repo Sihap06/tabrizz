@@ -140,7 +140,7 @@
 				searching:true,
 				info:false,
 				lengthMenu: [[10,50,100,-1],[10,50,100,"All"]],
-				serverside:true,
+				serverSide:true,
 				ordering:false,
 				language: {
 					'paginate': {

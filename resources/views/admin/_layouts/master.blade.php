@@ -4,8 +4,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="Start your development with a Dashboard for Bootstrap 4.">
-    <meta name="author" content="Creative Tim">
+    <meta name="description" content="Sistem POS Tabrizz store | lunarain-id">
+    <meta name="author" content="Tabrizz store">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Dashboard | {{config('app.name')}}</title>
     <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="16x16" href="{{ URL('/') }}/assetsCustomer/img/fav_logo.png">

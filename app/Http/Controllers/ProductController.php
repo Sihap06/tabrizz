@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use App\Category;
 use App\CategoryProduct;
 use App\ProductShop;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\Facades\DataTables;
 use RealRashid\SweetAlert\Facades\Alert;
@@ -47,6 +48,9 @@ class ProductController extends Controller
                     'products.stock',
                     'products.diskon',
                     'products.final_price',
+                    'products.diskon_type',
+                    'products.start_date',
+                    'products.end_date',
                 ]);
         } else {
             $barang = DB::table('products')
@@ -61,6 +65,9 @@ class ProductController extends Controller
                     'stock',
                     'diskon',
                     'final_price',
+                    'diskon_type',
+                    'start_date',
+                    'end_date'
                 ]);
         }
 
@@ -75,8 +82,37 @@ class ProductController extends Controller
             ->editColumn('harga_beli', function ($row) {
                 return number_format($row->harga_beli);
             })
+            ->editColumn('diskon', function ($row) {
+                $now = Carbon::now();
+                if ($now >= $row->start_date && $now <= $row->end_date) {
+                    $diskon = $row->diskon;
+                } else {
+                    $diskon = 0;
+                }
+
+                $formatDiskon = $row->diskon_type === 'persen' ? number_format($diskon) . '%' : 'Rp ' . number_format($diskon);
+
+                return $formatDiskon;
+            })
             ->editColumn('final_price', function ($row) {
-                return number_format($row->final_price);
+                $now = Carbon::now();
+                if ($now >= $row->start_date && $now <= $row->end_date) {
+                    if ($row->diskon_type == 'persen') {
+                        $final_price = $row->price - ($row->price * $row->diskon / 100);
+                    } else {
+                        $final_price = $row->price - $row->diskon;
+                    }
+                } else {
+                    $final_price = $row->price;
+                }
+
+                return number_format($final_price);
+            })
+            ->editColumn('start_date', function ($row) {
+                return Carbon::parse($row->start_date)->format('d/m/Y H:i');
+            })
+            ->editColumn('end_date', function ($row) {
+                return Carbon::parse($row->end_date)->format('d/m/Y H:i');
             })
             ->addColumn('temp_stock', function ($row) {
                 $stock = DB::table('product_shop')->where('product_id', $row->id)->where('deleted_at', NULL)->sum('temp_stock');
@@ -216,7 +252,13 @@ class ProductController extends Controller
 
         $data = DB::table('products')
             ->join('product_shop', 'products.id', '=', 'product_shop.product_id')
-            ->select('product_shop.temp_stock', 'products.product_name', 'products.warna', 'products.final_price', 'products.id', 'products.kode')
+            ->select(
+                'product_shop.temp_stock',
+                'products.product_name',
+                'products.warna',
+                'products.id',
+                'products.kode'
+            )
             ->where('product_shop.shop_id', $shopUser)
             ->where(function ($query) use ($search) {
                 $query->where('products.kode', $search)
@@ -233,45 +275,5 @@ class ProductController extends Controller
         }
 
         return response()->json($formatted_tags);
-    }
-    public function updateDiscount(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'type' => 'required',
-            'value' => 'required|integer',
-            'start' => 'required|date_format:Y-m-d H:i:s',
-            'end' => 'required|date_format:Y-m-d H:i:s',
-            'product_id' => 'required',
-        ]);
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 'errors',
-                'message' => $validator->errors()
-            ], 400);
-        }
-        $status = null;
-        $message = null;
-        DB::transaction(function () use ($request, &$status, &$message) {
-            try {
-                $update = DB::table('products')
-                    ->whereIn('id', $request->get('product_id'))
-                    ->update([
-                        'discount_type' => $request->get('type'),
-                        'diskon' => $request->get('value'),
-                        'start_discount' => $request->get('start'),
-                        'end_discount' => $request->get('end'),
-                    ]);
-                $status = 'success';
-                $message = 'sukses memperbarui data diskon!';
-            } catch (\Throwable $th) {
-                DB::rollback();
-                $status = 'failed';
-                $message = $th->getMessage();
-            }
-        });
-        return response()->json([
-            'status' => $status,
-            'message' => $message
-        ]);
     }
 }

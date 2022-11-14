@@ -45,7 +45,19 @@
                                     <strong class="name mb-0 text-sm">{{$value->product_name}} - {{$value->warna}}</strong>
                                 </td>
                                 <td class="align-middle">
-                                    <strong class="name mb-0 text-sm">Rp{{number_format($value->final_price)}}</strong>
+                                    @php
+                                    $now = Carbon\Carbon::now();
+                                    if ($now >= $value->start_date && $now <= $value->end_date) {
+                                        if ($value->diskon_type == 'persen') {
+                                            $final_price = $value->price - ($value->price * $value->diskon / 100);
+                                        } else {
+                                            $final_price = $value->price - $value->diskon;
+                                        }
+                                    } else {
+                                        $final_price = $value->price;
+                                    }
+                                    @endphp
+                                    <strong class="name mb-0 text-sm">Rp{{number_format($final_price)}}</strong>
                                 </td>
                                 <td class="align-middle">
                                     <form role="form" wire:submit.prevent="updateQty">
@@ -57,7 +69,7 @@
                                 </td>
                             </tr>
                             @php
-                            $total += $value->final_price * $value->qty;
+                            $total += $final_price * $value->qty;
                             @endphp
                             @endforeach
                             

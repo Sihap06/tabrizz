@@ -90,7 +90,7 @@
                   <label for="" class="col-sm-2 col-form-label">Jenis Paket Diskon</label>
                   <div class="col-sm-3">
                     <div class="form-check">
-                      <input class="form-check-input" type="radio" name="paketDiskon" value="persentase" id="persentase" checked>
+                      <input class="form-check-input" type="radio" name="paketDiskon" value="persen" id="persentase" checked>
                       <label class="form-check-label">
                         Persentase Diskon
                       </label>
@@ -107,7 +107,7 @@
                       <div class="input-group-prepend" id="prefix">
                         <span class="input-group-text">Rp</span>
                       </div>
-                      <input type="text" class="form-control" aria-describedby="nilaiDiskon">
+                      <input type="text" class="form-control" name="nilaiDiskon" aria-describedby="nilaiDiskon">
                       <div class="input-group-append" id="suffix">
                         <span class="input-group-text">%</span>
                       </div>
@@ -148,10 +148,16 @@
 
 <script>
   
+  $.ajaxSetup({
+    headers: {
+      'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+    }
+  });
+  
   $(document).ready(function(){
     $('#prefix').hide();
-
-
+    
+    
     function load_data(kategori = ''){
       $('#dataTable').DataTable({
         processing:true,
@@ -210,27 +216,68 @@
 <script>
   $('#btnKonfirmasi').on('click', function (){
     var row = $('#dataTable').DataTable().column(0).checkboxes.selected();
-    const data = []
+    const product_id = []
     
     $.each(row, function(index, rowId){
-      data.push($('#'+rowId).val())
+      product_id.push($('#'+rowId).val())
     })
     
     var startDate = $('#startDate').val()
     var startTime = $('#startTime').val()
     var endDate = $('#endDate').val()
     var endTime = $('#endTime').val()
-
+    
     var start = startDate + ' '+ startTime;
     var end = endDate + ' '+ endTime;
-
+    
+    var diskon = $('input[name="nilaiDiskon"]').val();
+    var type = $('input[name="paketDiskon"]:checked').val();
+    
+    if (product_id.length === 0) {
+      
+      Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: 'Silahkan pilih produk yang akan di diskon',
+      })
+      
+    }else {
+      var data = {product_id: product_id, start: start, end: end, type: type, value: diskon}
+      
+      $.ajax({
+        url: "{{ route('update-discount') }}",
+        data: data,
+        method: "POST",
+        beforeSend: function(){
+          Swal.fire({
+            title: 'Mohon tunggu sebentar ...',
+            html: 'Data sedang diproses',
+            timerProgressBar: true,
+            didOpen: () => {
+              Swal.showLoading()
+            },
+          })
+        }
+      })
+      .done(function(data){
+        console.log(data);
+        location.reload()
+      })
+      .fail(function(){
+        location.reload()
+      })
+    }
+    
+    
+    
+    
   })
   
   $('#persentase').on('click', function(){
     $('#suffix').show();
     $('#prefix').hide();
   })
-
+  
   $('#nominal').on('click', function(){
     $('#suffix').hide();
     $('#prefix').show();

@@ -78,6 +78,8 @@ Route::group(['middleware' => ['auth', 'admin']], function () {
 
     Route::post('transfer-produk', 'ShopController@transfer_produk')->name('transfer-produk');
     Route::post('hapus-produk/{product_id}/{shop_id}', 'ShopController@hapusProduk');
+
+    Route::post('update-discount', 'DiskonController@updateDiscount')->name('update-discount');
 });
 
 Route::group(['middleware' => ['auth']], function () {

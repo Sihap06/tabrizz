@@ -230,15 +230,35 @@ class ShopController extends Controller
         return view('admin.shop.product', compact(['id_', 'active', 'shop', 'shop_all', 'category']));
     }
 
+    private function getPrice($start_date, $end_date, $price, $diskon, $diskon_type)
+    {
+        $now = Carbon::now();
+        if ($now >= $start_date && $now <= $end_date) {
+            if ($diskon_type == 'persen') {
+                $final_price = $price - ($price * $diskon / 100);
+            } else {
+                $final_price = $price - $diskon;
+            }
+        } else {
+            $final_price = $price;
+        }
+
+        return $final_price;
+    }
+
     public function getproduct(Request $request, $id)
     {
 
         $shop = Toko::findOrFail($id);
 
         if (!empty($request->kategori)) {
-            $barang = DB::select("SELECT pr.product_name, pr.warna, pr.final_price, pr.id as product_id, ps.id, ps.temp_stock FROM products pr JOIN product_shop ps on pr.id = ps.product_id JOIN category_product cp ON pr.id = cp.product_id JOIN categories ca ON ca.id = cp.category_id WHERE ps.shop_id = '$id' and cp.category_id = '$request->kategori' and ps.deleted_at is null");
+            $barang = DB::select(
+                "SELECT pr.product_name, pr.price ,pr.diskon, pr.diskon_type, pr.start_date, pr.end_date ,pr.warna, pr.final_price, pr.id as product_id, ps.id, ps.temp_stock FROM products pr JOIN product_shop ps on pr.id = ps.product_id JOIN category_product cp ON pr.id = cp.product_id JOIN categories ca ON ca.id = cp.category_id WHERE ps.shop_id = '$id' and cp.category_id = '$request->kategori' and ps.deleted_at is null"
+            );
         } else {
-            $barang = DB::select("SELECT pr.product_name, pr.warna, pr.final_price, pr.id as product_id, ps.id, ps.temp_stock FROM products pr JOIN product_shop ps on pr.id = ps.product_id WHERE ps.shop_id = '$id' and ps.deleted_at is null");
+            $barang = DB::select(
+                "SELECT pr.product_name, pr.price ,pr.diskon, pr.diskon_type, pr.start_date, pr.end_date, pr.warna, pr.final_price, pr.id as product_id, ps.id, ps.temp_stock FROM products pr JOIN product_shop ps on pr.id = ps.product_id WHERE ps.shop_id = '$id' and ps.deleted_at is null"
+            );
         }
 
 
@@ -247,14 +267,17 @@ class ShopController extends Controller
                 return $row->product_name . ' - ' . $row->warna;
             })
             ->addColumn('harga', function ($row) {
-                return number_format($row->final_price);
+                $final_price = $this->getPrice($row->start_date, $row->end_date, $row->price, $row->diskon, $row->diskon_type);
+                return number_format($final_price);
             })
             ->addColumn('total', function ($row) {
-                $total = $row->final_price * $row->temp_stock;
+                $final_price = $this->getPrice($row->start_date, $row->end_date, $row->price, $row->diskon, $row->diskon_type);
+                $total = $final_price * $row->temp_stock;
                 return number_format($total);
             })
             ->addColumn('action', function ($row) use ($shop) {
-                $btn = '<button id="edit-user" data-toggle="modal" data-target="#editModal" data-name="' . $row->product_name . '" data-warna="' . $row->warna . '" data-id="' . $row->id . '" data-product_id = "' . $row->product_id . '" data-harga="' . $row->final_price . '" data-stock = "' . $row->temp_stock . '" class="btn btn-info btn-sm">
+                $final_price = $this->getPrice($row->start_date, $row->end_date, $row->price, $row->diskon, $row->diskon_type);
+                $btn = '<button id="edit-user" data-toggle="modal" data-target="#editModal" data-name="' . $row->product_name . '" data-warna="' . $row->warna . '" data-id="' . $row->id . '" data-product_id = "' . $row->product_id . '" data-harga="' . $final_price . '" data-stock = "' . $row->temp_stock . '" class="btn btn-info btn-sm">
                 <i class="fas fa-edit"></i>
                 </button>';
                 $btn .= '<button data-toggle="modal" data-target="#transferProdukModal" data-product_id="' . $row->product_id . '" data-shop_name="' . $shop->name . '" data-id="' . $shop->id . '" data-stok_tersedia="' . $row->temp_stock . '"  class="btn btn-primary btn-sm">

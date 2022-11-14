@@ -33,11 +33,13 @@ class ProdukKasir extends Component
 
         if ($this->search != null) {
             $data = DB::table('products')
+                ->select('product_shop.temp_stock', 'products.product_name', 'products.warna', 'products.final_price', 'products.id', 'products.kode', 'products.price', 'products.diskon', 'products.diskon_type', 'products.start_date', 'products.end_date')
                 ->join('product_shop', 'products.id', '=', 'product_shop.product_id')
                 ->where('product_shop.shop_id', $shopUser)
-                ->where('products.kode', $this->search)
-                ->orWhere('products.product_name', 'like', '%' . $this->search . '%')
-                ->select('product_shop.temp_stock', 'products.product_name', 'products.warna', 'products.final_price', 'products.id', 'products.kode')
+                ->where(function ($query) {
+                    $query->where('products.kode', $this->search)
+                        ->orWhere('products.product_name', 'like', '%' . $this->search . '%');
+                })
                 ->orderBy('product_shop.temp_stock', 'desc')
                 ->take(10)
                 ->get();
@@ -54,10 +56,10 @@ class ProdukKasir extends Component
         }
 
         $temp_order = DB::table('orders')
+            ->select('products.product_name', 'orders.qty', 'products.price', 'products.warna', 'orders.id', 'products.final_price', 'products.price', 'products.diskon', 'products.diskon_type', 'products.start_date', 'products.end_date')
             ->join('products', 'orders.product_id', '=', 'products.id')
             ->where('orders.user_id', $user_id)
             ->where('orders.code', $code)
-            ->select('products.product_name', 'orders.qty', 'products.price', 'products.warna', 'orders.id', 'products.final_price')
             ->orderBy('orders.created_at', 'desc')
             ->get();
 
@@ -113,6 +115,23 @@ class ProdukKasir extends Component
         }
     }
 
+    private function getTotalPrice($id)
+    {
+        $product = Product::findOrFail($id);
+        $now = Carbon::now();
+        if ($now >= $product->start_date && $now <= $product->end_date) {
+            if ($product->diskon_type == 'persen') {
+                $final_price = $product->price - ($product->price * $product->diskon / 100);
+            } else {
+                $final_price = $product->price - $product->diskon;
+            }
+        } else {
+            $final_price = $product->price;
+        }
+
+        return $final_price;
+    }
+
     public function submit($code, $total)
     {
         $this->validate(
@@ -125,20 +144,21 @@ class ProdukKasir extends Component
             ]
         );
 
-        if ($this->bayar >= $total) {
+        if ($this->bayar >= ($total - $this->diskonShow)) {
             $user = Auth::user();
             $shop_id = DB::table('shop_user')->where('user_id', $user->id)->value('shop_id');
             $data = DB::table('orders')->where('code', $code)->get();
             $dateNow = date('Y-m-d', strtotime(Carbon::now()));
             $jamNow = date('H:i:s', strtotime(Carbon::now()));
 
-            foreach ($data as $key => $dt) {
+            foreach ($data as $dt) {
                 DB::table('save_orders')->insert([
                     'user_id' => $dt->user_id,
                     'product_id' => $dt->product_id,
                     'shop_id' => $shop_id,
                     'qty' => $dt->qty,
-                    'total' => DB::table('products')->where('id', $dt->product_id)->value('final_price') * $dt->qty,
+                    'diskon' => $this->diskonShow,
+                    'total' => $this->getTotalPrice($dt->product_id) * $dt->qty,
                     'tanggal' => $dateNow,
                     'created_at' => Carbon::now(),
                     'updated_at' => Carbon::now(),

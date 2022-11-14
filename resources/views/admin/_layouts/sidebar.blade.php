@@ -56,6 +56,22 @@
           </li>
           @endif
 
+          @if ($active == 'diskon')
+          <li class="nav-item">
+            <a class="nav-link active" href="{{route('diskon')}}">
+              <i class="ni ni-box-2 text-blue"></i>
+              <span class="nav-link-text">Diskon</span>
+            </a>
+          </li>
+          @else
+          <li class="nav-item">
+            <a class="nav-link" href="{{route('diskon')}}">
+              <i class="ni ni-box-2 text-blue"></i>
+              <span class="nav-link-text">Diskon</span>
+            </a>
+          </li>
+          @endif
+
           @if ($active == 'toko')
           <li class="nav-item">
             <a class="nav-link active" href="{{route('shop.index')}}">
